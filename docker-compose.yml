@@ -1,0 +1,39 @@
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: f1_mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: f1user
+      MONGO_INITDB_ROOT_PASSWORD: f1password
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
+
+  spark-app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: f1_spark_app
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    volumes:
+      - ./:/app
+    ports:
+      - "8888:8888"
+      - "4040:4040"
+    environment:
+      MONGO_URI: mongodb://f1user:f1password@mongodb:27017/f1_db?authSource=admin
+      MONGO_DB: f1_db
+    command: python3 src/join_f1_data.py
+
+volumes:
+  mongo_data:
