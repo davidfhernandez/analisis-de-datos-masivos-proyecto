@@ -92,3 +92,9 @@ docker compose run --rm spark-app python3 src/join_f1_data.py --keep-alive
 ```bash
 docker compose down
 ```
+
+docker-compose build spark-app
+
+gcloud auth application-default login # not required because were not using IAM credentials
+
+docker-compose run --rm spark-app python3 src/export_bigquery.py
